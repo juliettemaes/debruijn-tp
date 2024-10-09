@@ -23,6 +23,7 @@ from networkx import (
     lowest_common_ancestor,
     has_path,
     random_layout,
+    shortest_path,
     draw,
     spring_layout,
 )
@@ -262,6 +263,7 @@ def path_average_weight(graph: DiGraph, path: List[str]) -> float:
         [d["weight"] for (u, v, d) in graph.subgraph(path).edges(data=True)]
     )
 
+
 def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> DiGraph:
     """Explore and solve bubble issue
 
@@ -287,6 +289,7 @@ def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> Di
     )
     return graph
 
+
 def simplify_bubbles(graph: DiGraph) -> DiGraph:
     """Detect and explode bubbles
 
@@ -309,27 +312,59 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
             break
     if bubble:
         simplify_bubbles(solve_bubble(graph, ancestor_node, node))
-    return graph        
+    return graph
 
 
 def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     """Remove entry tips
-
     :param graph: (nx.DiGraph) A directed graph object
     :param starting_nodes: (list) A list of starting nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    while True:
+        entry_tips = [node for node in graph if len(list(graph.predecessors(node))) > 1]
+        if not entry_tips:
+            break
+        for node in entry_tips:
+            # Find all paths from starting nodes to the entry tip
+            paths = [list(all_simple_paths(graph, node_start_i, node)) for node_start_i in starting_nodes]
+            paths = [path[0] for path in paths if len(path) > 0] # Remove empty paths
+            lengths = [len(path) - 1 for path in paths]
+            # Compute the average weight of the path if the path length is greater than 1
+            weights = [path_average_weight(graph, path) if lengths[i] > 1 else graph.get_edge_data(*path)["weight"]
+                       for i, path in enumerate(paths)]
+            # Remove all paths except the best one
+            graph = select_best_path(graph, paths, lengths, weights,
+                                     delete_entry_node=True, delete_sink_node=False)
+    return graph
 
 
 def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
     """Remove out tips
-
     :param graph: (nx.DiGraph) A directed graph object
     :param ending_nodes: (list) A list of ending nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    while True:
+        found_tip = False
+        for node in graph:
+            node_success = list(graph.successors(node))
+            if len(node_success) > 1:
+                paths = [list(all_simple_paths(graph, node, node_end_i))\
+                         for node_end_i in ending_nodes]
+                paths = [path[0] for path in paths if len(path) > 0]
+                lengths = [len(path) - 1 for path in paths]
+                weights = [path_average_weight(graph, path) if lengths[i] > 1 else \
+                           graph.get_edge_data(*path)["weight"]
+                           for i, path in enumerate(paths)]
+                graph = select_best_path(graph, paths, lengths, weights,
+                                         delete_entry_node=False, delete_sink_node=True)
+                found_tip = True
+                break
+        if not found_tip:
+            break
+    return graph
+
 
 
 def get_starting_nodes(graph: DiGraph) -> List[str]:
