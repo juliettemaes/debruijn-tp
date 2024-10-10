@@ -14,31 +14,33 @@
 """Perform assembly based on debruijn graph."""
 
 import argparse
+from operator import itemgetter
 import os
-import sys
 from pathlib import Path
+import random
+from random import randint
+import statistics
+import sys
+import textwrap
 from networkx import (
     DiGraph,
+    draw_networkx_edges,
+    draw_networkx_nodes,
     all_simple_paths,
     lowest_common_ancestor,
     has_path,
-    random_layout,
-    shortest_path,
     draw,
-    spring_layout,
+    random_layout,
 )
-import matplotlib
-from operator import itemgetter
-import random
+import matplotlib as plt
 
 random.seed(9001)
-from random import randint
-import statistics
-import textwrap
-import matplotlib.pyplot as plt
+
+
+
 from typing import Iterator, Dict, List
 
-matplotlib.use("Agg")
+plt.use("Agg")
 
 __author__ = "Juliette Maes"
 __copyright__ = "Universite Paris Diderot"
@@ -104,7 +106,7 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     :param fastq_file: (Path) Path to the fastq file.
     :return: A generator object that iterate the read sequences.
     """
-    with open(fastq_file, "r") as f:
+    with open(fastq_file, "r", encoding="utf-8") as f:
         while True:
             try:
                 # Skip the identifier line (starting with '@')
@@ -114,7 +116,7 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
                 # Skip the '+' line and the quality score line
                 _ = next(f).strip()
                 _ = next(f).strip()
-                
+
                 # Yield the sequence
                 yield sequence
             except StopIteration:
@@ -169,7 +171,7 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
         else:
             # Otherwise, create a new edge with the initial weight
             graph.add_edge(prefix, suffix, weight=weight)
-   
+
     return graph
 
 
@@ -234,7 +236,7 @@ def select_best_path(
         best_path_index = weight_avg_list.index(max(weight_avg_list))
     elif sd_weight == 0:
         # Compare the length of each path
-        if statistics.stdev(path_length_list) > 0 or len(path_length_list) == 1: # If ever there is only one path
+        if statistics.stdev(path_length_list) > 0 or len(path_length_list) == 1: # If only one path
             # Select the longest path
             best_path_index = path_length_list.index(max(path_length_list))
         else:
@@ -305,7 +307,7 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
             for i in range(len(predecessors)):
                 for j in range(i + 1, len(predecessors)):
                     ancestor_node = lowest_common_ancestor(graph, predecessors[i], predecessors[j])
-                    if ancestor_node != None:
+                    if ancestor_node is not None:
                         bubble = True
                         break
         if bubble:
@@ -327,7 +329,11 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
             break
         for node in entry_tips:
             # Find all paths from starting nodes to the entry tip
-            paths = [list(all_simple_paths(graph, node_start_i, node)) for node_start_i in starting_nodes]
+            paths = [
+                list(
+                    all_simple_paths(graph, node_start_i, node)
+                    ) for node_start_i in starting_nodes
+                    ]
             paths = [path[0] for path in paths if len(path) > 0] # Remove empty paths
             lengths = [len(path) - 1 for path in paths]
             # Compute the average weight of the path if the path length is greater than 1
@@ -420,7 +426,7 @@ def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     :param contig_list: (list) List of [contiguous sequence and their length]
     :param output_file: (Path) Path to the output file
     """
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         for i, (contig, length) in enumerate(contigs_list):
             # Write the header
             f.write(f">contig_{i} len={length}\n")
@@ -440,11 +446,10 @@ def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
     esmall = [(u, v) for (u, v, d) in graph.edges(data=True) if d["weight"] <= 3]
     # print(elarge)
     # Draw the graph with networkx
-    # pos=nx.spring_layout(graph)
-    pos = nx.random_layout(graph)
-    nx.draw_networkx_nodes(graph, pos, node_size=6)
-    nx.draw_networkx_edges(graph, pos, edgelist=elarge, width=6)
-    nx.draw_networkx_edges(
+    pos = random_layout(graph)
+    draw_networkx_nodes(graph, pos, node_size=6)
+    draw_networkx_edges(graph, pos, edgelist=elarge, width=6)
+    draw_networkx_edges(
         graph, pos, edgelist=esmall, width=6, alpha=0.5, edge_color="b", style="dashed"
     )
     # nx.draw_networkx(graph, pos, node_size=10, with_labels=False)
