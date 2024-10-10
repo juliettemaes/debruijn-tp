@@ -464,29 +464,30 @@ def main() -> None:  # pragma: no cover
 
     # Build kmer dictionnary
     kmer_dict = build_kmer_dict(args.fastq_file, args.kmer_size)
-    print(len(list(kmer_dict.keys())))
-    # print(kmer_dict)
 
     # Build the graph
+    print("Building graph")
     graph = build_graph(kmer_dict)
-    print(graph.number_of_edges())
-    print(graph.number_of_nodes())
 
-    # # Draw the graph
-    # draw(graph)
-    # plt.savefig("graph.png")
+    # Remove bubbles
+    print("Simplifying bubbles")
+    simplify_bubbles(graph)
 
-    # Simplify the graph
-    # Get the starting and ending nodes
-    starting_nodes = list(get_starting_nodes(graph))
-    ending_nodes = list(get_sink_nodes(graph))
+    # Solve entry tips
+    print("Solving entry tips")
+    starting_nodes = get_starting_nodes(graph)
+    graph = solve_entry_tips(graph, starting_nodes)
 
-    # Get the contigs
-    contigs_list = get_contigs(graph, starting_nodes, ending_nodes)
+    # Solve out tips
+    print("Solving out tips")
+    ending_nodes = get_sink_nodes(graph)
+    graph = solve_out_tips(graph, ending_nodes)
+
+    # Write output contigs
+    print("Writing contigs")
+    contigs_list = get_contigs(graph, get_starting_nodes(graph), get_sink_nodes(graph))
     save_contigs(contigs_list, args.output_file)
-
-    #     
-
+    print("Contigs written in", args.output_file)
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
