@@ -1,40 +1,27 @@
-# Assembleur basé sur les graphes de Debruijn
+# De Bruijn Graph-based Assembler
 
-Vous trouverez la description complète du TP [ici]( 
+You can find the complete description of the practical work [here]( 
 https://docs.google.com/document/d/1P4v3bHbSurD7RXA-ldVwmtNKGvWsnBae51RMGye_KLs/edit?usp=sharing).
 
 ## Introduction
 
-L’objectif de ce TP sera d’assembler le génome de l’entérovirus A71. Ce génome présente l’intérêt d’être très court: 7408 nucléotides, linéaire et non segmenté.
-Le fichier fastq dont vous disposez a été généré à l’aide du programme ART [Huang 2011] via la commande:
-art_illumina -i eva71.fna -ef -l 100 -f 20 -o eva71 -ir 0 -dr 0 -ir2 0 -dr2 0 -na -qL 41 -rs 1539952693 
-Les lectures ont une qualité maximale (41) et ne présentent pas d’insertion. Seuls les lectures correspondant aux brins 5’ -> 3’ vous sont ici fournies. 
+The goal of this practical work is to assemble the genome of the Enterovirus A71. This genome is particularly interesting because it is very short: 7408 nucleotides, linear, and non-segmented. The fastq file you have was generated using the ART program [Huang 2011] with the following command: art_illumina -i eva71.fna -ef -l 100 -f 20 -o eva71 -ir 0 -dr 0 -ir2 0 -dr2 0 -na -qL 41 -rs 1539952693 The reads have maximum quality (41) and contain no insertions. Only the reads corresponding to the 5’ -> 3’ strands are provided here.
 
-Dans le dossier debruijn-tp/data/, vous trouverez:
-eva71.fna : génome du virus d’intérêt
-eva71_plus_perfect.fq: lectures 
+In the debruijn-tp/data/ folder, you will find:
 
+    eva71.fna: genome of the virus of interest
+    eva71_plus_perfect.fq: reads
 
-## Installation des dépendances
+## Installing Dependencies
 
-Vous utiliserez les librairies networkx, pytest et pylint de Python:
+You will use the Python libraries networkx, pytest, and pylint:
 
 ```
 pip3 install --user networkx pytest pylint pytest-cov
 ```
 
-## Utilisation
+## Usage
 
-Vous créerez un programme Python3 nommé debruijn.py dans le dossier debruijn/.  Il prendra en argument :
- -i fichier fastq single end
- -k taille des kmer (optionnel - default 21)
- -o fichier output avec les contigs
+Run the Python3 program named debruijn.py in the debruijn/ folder. It will take as arguments: -i single-end fastq file -k kmer size (optional - default 21) -o output file with contigs.
 
-## Tests
 
-Vous testerez vos fonctions à l’aide de la commande pytest --cov=debruijn à exécuter dans le dossier debruijn-tp/. En raison de cette contrainte, les noms des fonctions ne seront pas libre. Il sera donc impératif de respecter le nom des fonctions “imposées”, de même que leur caractéristique et paramètres. 
-Vous vérifierez également la qualité syntaxique de votre programme en exécutant la commande: pylint debruijn.py
-
-## Contact
-
-En cas de questions, vous pouvez me contacter par email: amine.ghozlane[at]pasteur.fr
