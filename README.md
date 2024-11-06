@@ -22,6 +22,10 @@ pip3 install --user networkx pytest pylint pytest-cov
 
 ## Usage
 
-Run the Python3 program named debruijn.py in the debruijn/ folder. It will take as arguments: -i single-end fastq file -k kmer size (optional - default 21) -o output file with contigs.
+Run the Python3 program named debruijn.py in the debruijn/ folder. 
+It will take as arguments: 
+- -i single-end fastq file
+- -k kmer size (optional - default 21)
+- -o output file with contigs.
 
 
